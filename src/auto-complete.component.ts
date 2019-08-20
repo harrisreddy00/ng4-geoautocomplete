@@ -350,7 +350,9 @@ export class AutoCompleteComponent implements OnInit, OnChanges {
     if ((event.keyCode === 40) || (event.keyCode === 38) || (event.keyCode === 13)) {
       this.navigateInList(event.keyCode);
     } else if (inputVal) {
-      this.getListQuery(inputVal);
+      setTimeout(function() {		
+        this.getListQuery(inputVal);
+      }, 1000);
     } else {
       this.queryItems = [];
       if (this.userSelectedOption) {
@@ -500,6 +502,10 @@ export class AutoCompleteComponent implements OnInit, OnChanges {
       }
       this._autoCompleteSearchService.getGeoPrediction(_tempParams).then((result) => {
         this.updateListItem(result);
+        if(result.length == 1){
+          this.activeListNode(0);		
+          this.selectedListNode(0);
+        }
       });
     }else {
       this._autoCompleteSearchService.getPredictions(this.settings.geoPredictionServerUrl, value).then((result) => {
@@ -524,6 +530,13 @@ export class AutoCompleteComponent implements OnInit, OnChanges {
 
   //function to update the predicted list.
   private updateListItem(listData: any): any {
+    if (listData) {
+      listData = listData.filter(function (obj) {
+        if (obj.types.indexOf("postal_code") >= 0) {
+          return obj;
+        }
+      });
+    }
     this.queryItems = listData ? listData : [];
     this.dropdownOpen = true;
   }
@@ -606,7 +619,7 @@ export class AutoCompleteComponent implements OnInit, OnChanges {
     data.description = data.description ? data.description : data.formatted_address;
     data.active = false;
     this.selectedDataIndex = -1;
-    this.locationInput = data.description;
+    this.locationInput = data.name;
     if (this.settings.showRecentSearch) {
       this._autoCompleteSearchService.addRecentList(this.settings.recentStorageName, data, this.settings.noOfRecentSearchSave);
       this.getRecentLocations();
